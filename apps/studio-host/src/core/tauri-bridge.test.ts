@@ -12,9 +12,14 @@ const messageMock = vi.hoisted(() => vi.fn());
 const fsOpenMock = vi.hoisted(() => vi.fn());
 const statMock = vi.hoisted(() => vi.fn());
 const removeMock = vi.hoisted(() => vi.fn());
+const setTitleMock = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: invokeMock,
+}));
+
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({ setTitle: setTitleMock }),
 }));
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({
@@ -409,6 +414,7 @@ describe('TauriBridge', () => {
     });
 
     expect(document.title).toBe('source.hwp - HOP');
+    expect(setTitleMock).toHaveBeenLastCalledWith('source.hwp - HOP');
     expect(bridge.hasUnsavedChanges()).toBe(false);
 
     bridge.markDocumentDirty();
@@ -418,6 +424,7 @@ describe('TauriBridge', () => {
 
     expect(bridge.hasUnsavedChanges()).toBe(true);
     expect(document.title).toBe('• source.hwp - HOP');
+    expect(setTitleMock).toHaveBeenLastCalledWith('• source.hwp - HOP');
   });
 
   it('proxies updater commands through the Tauri bridge', async () => {

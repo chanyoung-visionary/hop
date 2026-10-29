@@ -1,5 +1,6 @@
 import { WasmBridge } from '@/upstream/core';
 import type { DocumentInfo } from '@/upstream/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { remove, stat } from '@tauri-apps/plugin-fs';
 import { finiteFileSize, readFileInChunks, writeFileInChunks } from './chunked-fs';
 import { loadDocumentForOpen } from './document-open';
@@ -588,6 +589,13 @@ export class TauriBridge extends WasmBridge implements DesktopBridgeApi {
 
   private updateDocumentTitle(): void {
     const name = this.docId ? this.fileName || '문서' : 'HOP';
-    document.title = `${this.dirty ? '• ' : ''}${name} - HOP`;
+    const title = `${this.dirty ? '• ' : ''}${name} - HOP`;
+    document.title = title;
+    // Tauri does not mirror document.title to the native title bar or taskbar.
+    void getCurrentWindow()
+      .setTitle(title)
+      .catch((error: unknown) => {
+        console.warn('[TauriBridge] native window title update failed:', error);
+      });
   }
 }
